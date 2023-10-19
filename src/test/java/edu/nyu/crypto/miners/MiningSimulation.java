@@ -20,6 +20,7 @@ import java.util.TreeMap;
  * Updates by Assimakis Kattis, Kevin Choi, Joseph Bonneau
  */
 public class MiningSimulation {
+    int LIMIT = 50;
     private final static Logger LOGGER = LoggerFactory.getLogger(MiningSimulation.class);
 
 
@@ -56,96 +57,131 @@ public class MiningSimulation {
 
     @Test
     public void simulate51PercentAttack1() {
-        LOGGER.info("Simulating 55% attacker, low churn network");
+        int success = 0;
+        for (int i = 0; i < LIMIT; i++) {
+            LOGGER.info("Simulating 55% attacker, low churn network");
 
-        List<Miner> miners = makeCompliantMiners(ImmutableList.of(200, 100, 100, 40, 10));
+            List<Miner> miners = makeCompliantMiners(ImmutableList.of(200, 100, 100, 40, 10));
 
-        Miner attacker = new MajorityMiner("Attacker", 550, 1);
-        miners.add(attacker);
+            Miner attacker = new MajorityMiner("Attacker", 550, 1);
+            miners.add(attacker);
 
-        ChurnFunction churn = new NormalChurnFunction(1, 1, new SimulationRandom(1234));
-        Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, churn);
-        Assertions.assertThat(relativeProfits.get(attacker.getId())).isGreaterThan(.98);
+            ChurnFunction churn = new NormalChurnFunction(1, 1, new SimulationRandom(1234));
+            Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, churn);
+            if (relativeProfits.get(attacker.getId()) > 0.98) {
+                success++;
+            }
+            System.out.println(i + " : " + relativeProfits.get(attacker.getId()));
+        }
+        Assertions.assertThat(success).isEqualTo(LIMIT);
+//        Assertions.assertThat(relativeProfits.get(attacker.getId())).isGreaterThan(.98);
     }
 
 	@Test
     public void simulate51PercentAttack2() {
-        LOGGER.info("Simulating 51% attacker, high churn network");
+        int success = 0;
+        for (int i = 0; i < LIMIT; i++) {
+            LOGGER.info("Simulating 51% attacker, high churn network");
 
-        List<Miner> miners = makeCompliantMiners(ImmutableList.of(200, 100, 100, 50, 40));
+            List<Miner> miners = makeCompliantMiners(ImmutableList.of(200, 100, 100, 50, 40));
 
-        Miner attacker = new MajorityMiner("Attacker", 510, 1);
-        miners.add(attacker);
+            Miner attacker = new MajorityMiner("Attacker", 510, 1);
+            miners.add(attacker);
 
-        SimulationRandom rng = new SimulationRandom(2345);
-        ChurnFunction churn = new NormalChurnFunction(5, 5, rng);
-        Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, churn);
-        Assertions.assertThat(relativeProfits.get(attacker.getId())).isGreaterThan(.6);
+            SimulationRandom rng = new SimulationRandom(2345);
+            ChurnFunction churn = new NormalChurnFunction(5, 5, rng);
+            Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, churn);
+            if (relativeProfits.get(attacker.getId()) > 0.6) success++;
+            System.out.println(i + " : " + relativeProfits.get(attacker.getId()));
+        }
+        Assertions.assertThat(success).isEqualTo(LIMIT);
+//        Assertions.assertThat(relativeProfits.get(attacker.getId())).isGreaterThan(.6);
     }
 
 
     @Test
     public void simulateSelfishMining1() {
-        LOGGER.info("Simulating selfish miner at 40%, no churn");
+        int success = 0;
+        for (int i = 0; i < LIMIT; i++) {
+            LOGGER.info("Simulating selfish miner at 40%, no churn");
 
-        List<Miner> miners = makeCompliantMiners(ImmutableList.of(15, 15, 10, 10, 10));
+            List<Miner> miners = makeCompliantMiners(ImmutableList.of(15, 15, 10, 10, 10));
 
-        Miner attacker = new SelfishMiner("Attacker", 40, 1);
-        miners.add(attacker);
+            Miner attacker = new SelfishMiner("Attacker", 40, 1);
+            miners.add(attacker);
 
-        Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, ChurnFunction.NO_CHURN);
-        double attackerProfits = relativeProfits.get(attacker.getId());
-        Assertions.assertThat(attackerProfits).isGreaterThan(.415);
+            Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, ChurnFunction.NO_CHURN);
+            double attackerProfits = relativeProfits.get(attacker.getId());
+            if (attackerProfits > 0.415) success++;
+            System.out.println(i + " : " + attackerProfits);
+        }
+        Assertions.assertThat(success).isEqualTo(LIMIT);
+//        Assertions.assertThat(attackerProfits).isGreaterThan(.415);
     }
 
     @Test
     public void simulateSelfishMining2() {
+        int success = 0;
+        for (int i = 0; i < LIMIT; i++) {
+            LOGGER.info("Simulating selfish miner at 31%, with churn");
 
-        LOGGER.info("Simulating selfish miner at 31%, with churn");
+            List<Miner> miners = makeCompliantMiners(ImmutableList.of(150, 150, 100, 100, 100));
 
-        List<Miner> miners = makeCompliantMiners(ImmutableList.of(150, 150, 100, 100, 100));
+            Miner attacker = new SelfishMiner("Attacker", 270, 60);
+            miners.add(attacker);
 
-    	Miner attacker = new SelfishMiner("Attacker", 270, 60);
-        miners.add(attacker);
-
-        ChurnFunction churn = new NormalChurnFunction(1, 1, new SimulationRandom(3456));
-        Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, churn);
-        double attackerProfits = relativeProfits.get(attacker.getId());
-        Assertions.assertThat(attackerProfits).isGreaterThan(.35);
+            ChurnFunction churn = new NormalChurnFunction(1, 1, new SimulationRandom(3456));
+            Map<String, Double> relativeProfits = runSimulation(miners, BlockReward.ONE, churn);
+            double attackerProfits = relativeProfits.get(attacker.getId());
+            if (attackerProfits > 0.35) success++;
+            System.out.println(i + " : " + attackerProfits);
+        }
+        Assertions.assertThat(success).isEqualTo(LIMIT);
+//        Assertions.assertThat(attackerProfits).isGreaterThan(.35);
     }
 
     @Test
     public void simulateFeeSniping1() {
+        int success = 0;
+        for (int i = 0; i < LIMIT; i++) {
+            LOGGER.info("Simulating fee sniping miner at 30%, with churn");
 
-        LOGGER.info("Simulating fee sniping miner at 30%, with churn");
+            List<Miner> miners = makeCompliantMiners(ImmutableList.of(200, 150, 150, 100, 100));
 
-        List<Miner> miners = makeCompliantMiners(ImmutableList.of(200, 150, 150, 100, 100));
+            Miner attacker = new FeeSnipingMiner("Attacker", 300, 1);
+            miners.add(attacker);
 
-        Miner attacker = new FeeSnipingMiner("Attacker", 300, 1);
-        miners.add(attacker);
-
-        BlockReward reward = new LognormalReward(new SimulationRandom(8765));
-        Map<String, Double> relativeProfits = runSimulation(miners, reward, ChurnFunction.NO_CHURN);
-        double attackerProfits = relativeProfits.get(attacker.getId());
-        Assertions.assertThat(attackerProfits).isGreaterThan(.33);
+            BlockReward reward = new LognormalReward(new SimulationRandom(8765));
+            Map<String, Double> relativeProfits = runSimulation(miners, reward, ChurnFunction.NO_CHURN);
+            double attackerProfits = relativeProfits.get(attacker.getId());
+            if (attackerProfits > 0.33) success++;
+            System.out.println(i + " : " + attackerProfits);
+        }
+        Assertions.assertThat(success).isEqualTo(LIMIT);
+//        Assertions.assertThat(attackerProfits).isGreaterThan(.33);
     }
 
     @Test
     public void simulateFeeSniping2() {
+        int success = 0;
+        for (int i = 0; i < LIMIT; i++) {
+            LOGGER.info("Simulating fee sniping miner at 29%, with churn");
 
-        LOGGER.info("Simulating fee sniping miner at 29%, with churn");
+            List<Miner> miners = makeCompliantMiners(ImmutableList.of(220, 190, 150, 130, 20));
 
-        List<Miner> miners = makeCompliantMiners(ImmutableList.of(220, 190, 150, 130, 20));
+            Miner attacker = new FeeSnipingMiner("Attacker", 290, 1);
+            miners.add(attacker);
 
-        Miner attacker = new FeeSnipingMiner("Attacker", 290, 1);
-        miners.add(attacker);
-
-        SimulationRandom rng = new SimulationRandom(5678);
-        BlockReward reward = new LognormalReward(rng);
-        ChurnFunction churn = new NormalChurnFunction(0.5, 1, rng);
-        Map<String, Double> relativeProfits = runSimulation(miners, reward, churn);
-        double attackerProfits = relativeProfits.get(attacker.getId());
-        Assertions.assertThat(attackerProfits).isGreaterThan(.31);
+            SimulationRandom rng = new SimulationRandom(5678);
+            BlockReward reward = new LognormalReward(rng);
+            ChurnFunction churn = new NormalChurnFunction(0.5, 1, rng);
+            Map<String, Double> relativeProfits = runSimulation(miners, reward, churn);
+            double attackerProfits = relativeProfits.get(attacker.getId());
+            if (attackerProfits > 0.31) success++;
+            System.out.println(i + " : " + attackerProfits);
+        }
+        Assertions.assertThat(success).isEqualTo(LIMIT);
+//        Assertions.assertThat(attackerProfits).isGreaterThan(.31);
     }
 
     /**
